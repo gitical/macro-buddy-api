@@ -33,13 +33,13 @@ namespace foodTrackerApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get([FromQuery] PaginationFilter paginationFilter)
+        public async Task<IActionResult> Get([FromQuery] PaginationFilter paginationFilter)
         {
 
             try
             {
                 var queryResult = _ctx.FoodEntries.Where(e => e.UserId == Guid.Parse(GetUserId())).Include(c => c.Food).AsNoTracking();
-                var paginatedResult = queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToList();
+                var paginatedResult = await queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToListAsync();
 
                 var pagination = new Pagination(queryResult.Count(), paginationFilter);
                 var response = new PaginatedResponse<IEnumerable<FoodEntry>>(paginatedResult, pagination);
@@ -55,15 +55,15 @@ namespace foodTrackerApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddEntry(FoodEntryRequest entry)
+        public async Task<IActionResult> AddEntry(FoodEntryRequest entry)
         {
             try
             {
-                var food = _ctx.Foods.Where(f => f.Id == entry.FoodId).FirstOrDefault();
+                var food = await _ctx.Foods.Where(f => f.Id == entry.FoodId).FirstOrDefaultAsync();
                 var foodEntry = new FoodEntry { Food = food, Timestamp = DateTime.Now, Amount = entry.Amount, UserId = Guid.Parse(GetUserId()) };
 
                 _ctx.FoodEntries.Add(foodEntry);
-                _ctx.SaveChanges();
+                await _ctx.SaveChangesAsync();
 
                 return Created("api/foodentry", foodEntry);
             }
@@ -75,13 +75,13 @@ namespace foodTrackerApi.Controllers
         }
 
         [HttpPut]
-        public IActionResult UpdateEntry(FoodEntry foodEntry)
+        public async Task<IActionResult> UpdateEntry(FoodEntry foodEntry)
         {
             try
             {
                 //foodEntry.ModifiedDate = DateTime.Now;
                 _ctx.FoodEntries.Update(foodEntry);
-                _ctx.SaveChanges();
+                await _ctx.SaveChangesAsync();
 
                 return Accepted();
             }
@@ -94,14 +94,14 @@ namespace foodTrackerApi.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteEntry(int id)
+        public async Task<IActionResult> DeleteEntry(int id)
         {
             try
             {
-                var entry = _ctx.FoodEntries.Where(e => e.Id == id).FirstOrDefault();
+                var entry = await _ctx.FoodEntries.Where(e => e.Id == id).FirstOrDefaultAsync();
 
                 _ctx.FoodEntries.Remove(entry);
-                _ctx.SaveChanges();
+                await _ctx.SaveChangesAsync();
 
                 return Accepted();
             }
