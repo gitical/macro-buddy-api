@@ -26,12 +26,12 @@ namespace foodTrackerApi.Controllers
 
 
         [HttpGet]
-        public IActionResult Get([FromQuery] PaginationFilter paginationFilter)
+        public async Task<IActionResult> Get([FromQuery] PaginationFilter paginationFilter)
         {
             try
             {
                 var queryResult = _ctx.Foods.Include(c => c.Category).AsNoTracking();
-                var paginatedResult = queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToList();
+                var paginatedResult = await queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToListAsync();
                 var pagination = new Pagination(queryResult.Count(), paginationFilter);
                 var response = new PaginatedResponse<IEnumerable<Food>>(paginatedResult, pagination);
 
@@ -46,12 +46,13 @@ namespace foodTrackerApi.Controllers
 
         [Route("Search")]
         [HttpGet]
-        public IActionResult GetFoodBySearch(string q, [FromQuery] PaginationFilter paginationFilter)
+        public async Task<IActionResult> GetFoodBySearch(string q, [FromQuery] PaginationFilter paginationFilter)
         {
             try
             {
                 var queryResult = _ctx.Foods.Include(c => c.Category).AsNoTracking().Where(f => f.Name.Contains(q));
-                var paginatedResult = queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToList();
+                var paginatedResult = await queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToListAsync();
+
                 var pagination = new Pagination(queryResult.Count(), paginationFilter);
                 var response = new PaginatedResponse<IEnumerable<Food>>(paginatedResult, pagination);
 
@@ -66,11 +67,12 @@ namespace foodTrackerApi.Controllers
         }
 
         [HttpGet("{foodId:int}")]
-        public IActionResult GetFoodById(int foodId)
+        public async Task<IActionResult> GetFoodById(int foodId)
         {
             try
             {
-                var food = _ctx.Foods.Include(c => c.Category).AsNoTracking().Where(f => f.Id == foodId).FirstOrDefault();
+
+                var food = await _ctx.Foods.Include(c => c.Category).AsNoTracking().Where(f => f.Id == foodId).FirstOrDefaultAsync();
 
                 if (food == null)
                     return NotFound();
@@ -89,12 +91,12 @@ namespace foodTrackerApi.Controllers
 
         [Route("Category")]
         [HttpGet]
-        public IActionResult GetFoodByCategoryId(int id, [FromQuery] PaginationFilter paginationFilter)
+        public async Task<IActionResult> GetFoodByCategoryId(int id, [FromQuery] PaginationFilter paginationFilter)
         {
             try
             {
                 var queryResult = _ctx.Foods.Include(c => c.Category).AsNoTracking().Where(f => f.Category.Id == id);
-                var paginatedResult = queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToList();
+                var paginatedResult = await queryResult.Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize).Take(paginationFilter.PageSize).ToListAsync();
                 var pagination = new Pagination(queryResult.Count(), paginationFilter);
                 var response = new PaginatedResponse<IEnumerable<Food>>(paginatedResult, pagination);
 
